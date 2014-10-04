@@ -1,10 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
 <title>life.rocks</title>
 </head>
 
-<body>
+<body ng-app="lifeRocks" ng-controller="lifeRocksCtrl">
+<form>
+    <textarea type="textarea" style="height: 100px; width: 400px; font-size: 1.2em" maxlength="129" ng-model="tweet"></textarea>
+    <button type="button" ng-click="sendTweet()" >ROCK!</button>
+</form>
+
+<div ng-repeat="aTweet in tweets">
+    <div>{{aTweet}}</div>
+</div>
+
+<div ng-repeat="song in songs">
+<a ng-href="{{song.url}}" target="_blank">{{song.artist}} - {{song.title}}</a>
+</div>
 </body>
+
+
+<script>
+(function(angular){
+    'use strict';
+    angular.module('lifeRocks',[])
+        .controller('lifeRocksCtrl', function($scope, $http){
+            $scope.tweets = [];
+            $scope.songs = [];
+            $scope.sendTweet = function(){
+                var tweetCopy = angular.copy($scope.tweet),
+                    splitTweet = tweetCopy.split(" ");
+                tweetCopy = tweetCopy + ' #LIFEROCKS';
+                $scope.tweets.push( tweetCopy );
+                $scope.tweet = '';
+                
+                splitTweet.forEach( function(word){
+                    word = word.toUpperCase();
+                    if( word == 'THE' || word == 'AN' || word == 'A'){}
+                    else{
+                        $http({method: 'GET', url: 'https://api.spotify.com/v1/search?type=track&market=US&limit=1&q='+word}).
+                        success(function(data, status, headers, config) {
+                          var trackData = data.tracks.items[0];
+                          var song = { artist: trackData.artists[0].name, title: trackData.name, url: trackData.external_urls.spotify }
+                          $scope.songs.push( song );
+                        })
+                    }
+              });
+            };
+        });
+}(angular));
+</script>
 
 </html>
